@@ -1,0 +1,4 @@
+distance_km,traffic,weather,priority,predicted_minutes
+5,0,0,Standard,20.7
+12,2,1,Express,35.9
+20,3,2,Critical,48.4

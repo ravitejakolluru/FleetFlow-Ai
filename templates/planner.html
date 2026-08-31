@@ -1,0 +1,23 @@
+{% extends 'base.html' %}{% block content %}
+<div class="pagehead compact-head"><div><div class="eyebrow">WORKSPACE · 01</div><h1>Smart Delivery Planner</h1><p>Search a location, let FleetFlow calculate the road distance, predict ETA and allocate the best vehicle.</p></div><div class="statusdot"><i></i> ROUTE ENGINE READY</div></div>
+<div class="workspace single-workspace">
+<section class="panel planner-panel" id="planner">
+  <div class="paneltitle"><div><b>SMART DELIVERY PLANNER</b><span>LOCATION AI + ETA ENGINE</span></div><div class="stepbadge">PLAN</div></div>
+  <form id="orderForm" class="formgrid" autocomplete="off">
+    <label class="fullrow">Customer / Order<input id="customer" required placeholder="e.g. Ravi order #2048"></label>
+    <div class="location-field"><label>Origin <span class="field-state" id="originState">SEARCH</span><input id="origin" required placeholder="Type a place, area or city…"><div id="originSuggestions" class="suggestions"></div></label></div>
+    <div class="location-field"><label>Destination <span class="field-state" id="destinationState">SEARCH</span><input id="destination" required placeholder="Type a place, area or city…"><div id="destinationSuggestions" class="suggestions"></div></label></div>
+    <div class="auto-distance fullrow"><div><span>ROUTE DISTANCE</span><strong id="distanceDisplay">—</strong><small id="routeStatus">Select both locations to calculate road distance.</small></div><div class="route-chip" id="routeChip">WAITING FOR LOCATIONS</div></div>
+    <input type="hidden" id="originLat"><input type="hidden" id="originLon"><input type="hidden" id="destinationLat"><input type="hidden" id="destinationLon">
+    <label>Traffic<select id="traffic"><option value="0">Low</option><option value="1" selected>Moderate</option><option value="2">High</option><option value="3">Severe</option></select></label>
+    <label>Weather<select id="weather"><option value="0">Clear</option><option value="1">Rain</option><option value="2">Storm</option></select></label>
+    <label>Priority<select id="priority"><option>Standard</option><option>Express</option><option>Critical</option></select></label>
+    <label>Vehicle preference<select id="vehicle_type"><option>Any</option><option>Bike</option><option>EV Van</option><option>Van</option><option>Mini Truck</option></select></label>
+    <div class="map-pick-controls fullrow"><button type="button" class="ghost mini" id="pickOriginBtn">⌖ Pick origin on map</button><button type="button" class="ghost mini" id="pickDestinationBtn">⌖ Pick destination on map</button><span id="mapPickHint">Or select a suggestion above.</span></div>
+    <div class="fullrow"><button type="button" class="btn full" id="predictBtn">Predict ETA & Allocate Fleet →</button></div>
+  </form>
+  <div id="prediction" class="result hidden"></div>
+</section>
+<section class="panel map-panel"><div class="paneltitle"><div><b>ROUTE PREVIEW</b><span id="mapModeLabel">READY</span></div><div class="map-live"><i></i> ROUTING</div></div><div id="map"></div><div class="maplegend"><span><i class="legend-dot origin-dot"></i>Origin</span><span><i class="legend-dot destination-dot"></i>Destination</span><span><i class="legend-line"></i>Road route</span></div><div class="mapfooter"><span id="routeSummary">Select two locations</span></div></section>
+</div>
+{% endblock %}

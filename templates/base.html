@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ title or 'FleetFlow AI' }}</title>
+<link rel="preconnect" href="https://unpkg.com"><link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
+<body data-page-motion="fleetflow" data-role="{{ session.get('role','user') }}">
+<nav class="nav">
+<a class="brand" href="{{url_for('dashboard') if session.get('user_id') else url_for('home')}}"><span class="brand-mark">F</span><span class="brand-name">FleetFlow</span><small>AI</small></a>
+{% if session.get('user_id') %}
+<div class="navlinks">
+<a class="navitem {% if request.endpoint=='dashboard' %}active{% endif %}" href="{{url_for('dashboard')}}"><span>⌂</span> Dashboard</a>
+<a class="navitem {% if request.endpoint=='planner_page' %}active{% endif %}" href="{{url_for('planner_page')}}"><span>＋</span> Plan</a>
+<a class="navitem {% if request.endpoint=='live_map_page' %}active{% endif %}" href="{{url_for('live_map_page')}}"><span>⌖</span> Live Map</a>
+<a class="navitem {% if request.endpoint=='orders_page' %}active{% endif %}" href="{{url_for('orders_page')}}"><span>▤</span> Orders</a>
+<a class="navitem {% if request.endpoint=='fleet_page' %}active{% endif %}" href="{{url_for('fleet_page')}}"><span>◈</span> Fleet</a>
+<a class="navitem {% if request.endpoint=='developers' %}active{% endif %}" href="{{url_for('developers')}}"><span>♙</span> Developers</a>
+{% if session.get('role')=='admin' %}<a class="navitem admin-nav {% if request.endpoint=='admin' %}active{% endif %}" href="{{url_for('admin')}}"><span>◆</span> Admin</a>{% endif %}
+<button class="nav-ai" type="button" onclick="window.dispatchEvent(new CustomEvent('open-fleet-ai'))"><span>✦</span> AI</button>
+<a class="logout-link" href="{{url_for('logout')}}" title="Sign out">↪</a>
+</div>
+{% else %}<div class="navlinks"><a class="navitem" href="{{url_for('login')}}">Login</a><a class="pill" href="{{url_for('register')}}">Create account</a></div>{% endif %}
+</nav>
+{% if session.get('user_id') %}<div class="statusbar"><div class="statusbar-inner"><span class="status-label">ORDERS</span>{% for s in ['All','Processing','In Transit','Delivered','Cancelled'] %}<a class="statusnavlink status-{{s|lower|replace(' ','-')}} {% if requested_status|default('All')==s %}active{% endif %}" href="{{url_for('orders_page',status=s)}}">{{s}}</a>{% endfor %}<span class="nav-divider"></span><span class="clock"><i></i><b id="liveClock">--:--:--</b><small>LOCAL</small></span></div></div>{% endif %}
+<main>{% with messages=get_flashed_messages(with_categories=true) %}{% for cat,msg in messages %}<div class="flash {{cat}}">{{msg}}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main>
+{% if session.get('user_id') %}<div class="ai-fab-wrap"><button id="chatToggle" class="ai-fab" aria-label="Open FleetAI assistant"><span>✦</span><span>FleetAI</span><small>Copilot</small></button></div><div id="chatModal" class="ai-modal hidden" aria-hidden="true"><div class="ai-backdrop" onclick="toggleChat(false)"></div><section class="ai-dialog" role="dialog" aria-modal="true" aria-labelledby="aiTitle"><div class="chathead"><div><div class="ai-kicker">FLEETFLOW INTELLIGENCE</div><strong id="aiTitle">FleetAI Copilot</strong><small>Route, ETA & fleet assistant</small></div><button onclick="toggleChat(false)" aria-label="Close FleetAI">×</button></div><div id="chatlog" class="chatlog"><div class="bot">Hi! I’m FleetAI. Ask me about routes, ETA, tracking, fleet or order status.</div></div><div class="chat-suggestions"><button onclick="askSuggestion('How is the ETA calculated?')">ETA</button><button onclick="askSuggestion('How does live tracking work?')">Tracking</button><button onclick="askSuggestion('How does fleet allocation work?')">Fleet</button></div><div class="chatinput"><input id="chatInput" placeholder="Ask FleetAI…" autocomplete="off"><button onclick="sendChat()">→</button></div></section></div>{% endif %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="{{url_for('static',filename='app.js')}}"></script>
+</body></html>

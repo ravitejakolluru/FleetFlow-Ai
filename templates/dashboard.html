@@ -1,0 +1,24 @@
+{% extends 'base.html' %}{% block content %}
+<section class="dashboard-home">
+  <div class="welcome-card">
+    <div class="eyebrow">FLEETFLOW AI · COMMAND HOME</div>
+    <h1>Welcome, <span>{{ session.name }}</span>.</h1>
+    <p>Your logistics command center is ready. Choose a workspace from the navigation above to plan deliveries, watch routes, manage orders or inspect fleet capacity.</p>
+    <div class="quick-actions">
+      <a class="action action-violet" href="{{url_for('planner_page')}}"><b>＋</b><span><strong>Plan Delivery</strong><small>Create a route & predict ETA</small></span></a>
+      <a class="action action-cyan" href="{{url_for('live_map_page')}}"><b>⌖</b><span><strong>Live Map</strong><small>Watch active vehicles</small></span></a>
+      <a class="action action-amber" href="{{url_for('orders_page')}}"><b>▤</b><span><strong>Orders</strong><small>Track every delivery</small></span></a>
+      <a class="action action-pink" href="{{url_for('fleet_page')}}"><b>◈</b><span><strong>Fleet</strong><small>Availability & vehicles</small></span></a>
+    </div>
+  </div>
+  <section class="stats dashboard-stats">
+    <div class="stat-violet"><span>Total orders</span><strong>{{stats.orders}}</strong><small>All deliveries</small></div>
+    <div class="stat-amber"><span>Processing</span><strong>{{stats.processing}}</strong><small>Preparing</small></div>
+    <div class="stat-cyan"><span>In transit</span><strong>{{stats.transit}}</strong><small>Live routes</small></div>
+    <div class="stat-green"><span>Delivered</span><strong>{{stats.delivered}}</strong><small>Completed</small></div>
+    <div class="stat-pink"><span>Average ETA</span><strong>{{stats.avg}} <em>min</em></strong><small>AI prediction</small></div>
+    <div class="stat-orange"><span>Fleet ready</span><strong>{{stats.fleet}}<em>/{{stats.total_fleet}}</em></strong><small>Available vehicles</small></div>
+  </section>
+  <div class="dashboard-note"><span>● SYSTEM READY</span><p>Real-time delivery status follows the stored ETA clock. Open <b>Live Map</b> to see active route movement.</p></div>
+</section>
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends 'base.html' %}{% block content %}
+<div class="pagehead admin-head"><div><div class="eyebrow">GLOBAL CONTROL CENTER</div><h1>Admin <span>Command.</span></h1><p>Edit or remove any order, correct locations, recalculate routes, and maintain fleet resources from one control surface.</p></div><div class="statusdot admin-badge"><i></i> GLOBAL ADMIN</div></div>
+
+<section class="admin-summary">
+  <div><span>Orders</span><strong>{{orders|length}}</strong><small>latest 50</small></div>
+  <div><span>Users</span><strong>{{users|length}}</strong><small>registered</small></div>
+  <div><span>Fleet</span><strong>{{fleet|length}}</strong><small>vehicles</small></div>
+  <div><span>Control</span><strong>FULL</strong><small>orders + locations</small></div>
+</section>
+
+<section class="panel admin-orders" id="admin-orders">
+  <div class="paneltitle"><div><b>ORDER & LOCATION CONTROL</b><span>ADMIN CAN EDIT / DELETE</span></div><button class="ghost mini" onclick="location.reload()">↻ Refresh</button></div>
+  <div class="admin-layout">
+    <div class="admin-order-list">
+      {% for o in orders %}
+      <article class="admin-order" id="admin-order-{{o.id}}" data-id="{{o.id}}">
+        <div class="admin-order-top"><div><b>#{{o.id}} · {{o.customer}}</b><span>{{o.origin}} → {{o.destination}}</span></div><span class="tag status-{{o.status|lower|replace(' ','-')}}">{{o.status}}</span></div>
+        <div class="admin-order-meta"><span>{{o.distance or 0}} km</span><span>ETA {{o.eta_at[11:16] if o.eta_at else '—'}} UTC</span><span>{{o.priority}}</span></div>
+        <div class="admin-actions"><button class="ghost mini" onclick='editAdminOrder({{o|tojson}})'>✎ Edit</button><button class="danger mini" onclick="deleteAdminOrder({{o.id}})">⌫ Delete</button></div>
+      </article>
+      {% else %}<div class="empty">No orders available.</div>{% endfor %}
+    </div>
+
+    <div class="admin-editor" id="adminEditor">
+      <div class="editor-kicker">SELECT AN ORDER</div><h2>Edit delivery</h2><p class="editor-note">Change the customer, locations, coordinates, status or delivery conditions. Saving a live route recalculates its road distance and ETA.</p>
+      <form id="adminOrderForm" class="formgrid" autocomplete="off">
+        <input type="hidden" id="adminOrderId">
+        <label class="fullrow">Customer / Order<input id="adminCustomer" required></label>
+        <label>Origin<input id="adminOrigin" required></label>
+        <label>Destination<input id="adminDestination" required></label>
+        <label>Origin latitude<input id="adminOriginLat" type="number" step="0.000001" required></label>
+        <label>Origin longitude<input id="adminOriginLon" type="number" step="0.000001" required></label>
+        <label>Destination latitude<input id="adminDestinationLat" type="number" step="0.000001" required></label>
+        <label>Destination longitude<input id="adminDestinationLon" type="number" step="0.000001" required></label>
+        <label>Traffic<select id="adminTraffic"><option value="0">Low</option><option value="1">Moderate</option><option value="2">High</option><option value="3">Severe</option></select></label>
+        <label>Weather<select id="adminWeather"><option value="0">Clear</option><option value="1">Rain</option><option value="2">Storm</option></select></label>
+        <label>Priority<select id="adminPriority"><option>Standard</option><option>Express</option><option>Critical</option></select></label>
+        <label>Status<select id="adminStatus"><option>Processing</option><option>In Transit</option><option>Delivered</option><option>Cancelled</option></select></label>
+        <div class="admin-location-tools fullrow"><button type="button" class="ghost mini" id="adminPickOrigin">⌖ Pick origin</button><button type="button" class="ghost mini" id="adminPickDestination">⌖ Pick destination</button><span id="adminMapHint">Select an order to edit.</span></div>
+        <div class="fullrow admin-editor-actions"><button class="btn full" type="submit" id="adminSaveBtn">Save changes & recalculate →</button></div>
+      </form>
+      <div id="adminMessage" class="admin-message hidden"></div>
+    </div>
+  </div>
+  <div id="adminMap" class="admin-map"></div>
+  <p class="mapnote">Admin map controls change the saved origin/destination coordinates. The next save recalculates the road route, distance and ETA.</p>
+</section>
+
+<section class="panel" id="fleet">
+  <div class="paneltitle"><div><b>FLEET REGISTRY</b><span>{{fleet|length}} vehicles</span></div></div>
+  <div class="fleetgrid">{% for f in fleet %}<div class="fleetcard"><b>{{f.vehicle_no}}</b><span>{{f.driver}} · {{f.vehicle_type}}</span><small>{{f.capacity}} kg · {% if f.available %}Available{% else %}Busy{% endif %}</small></div>{% endfor %}</div>
+</section>
+
+<section class="panel" id="user-directory">
+  <div class="paneltitle">
+    <div><b>USER DIRECTORY</b><span>Click a user to manage the account</span></div>
+  </div>
+  <div class="tablewrap">
+    <table class="user-directory-table">
+      <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Created</th><th>Account</th></tr></thead>
+      <tbody>
+      {% for u in users %}
+        <tr class="user-row" tabindex="0" role="button"
+            onclick='openUserDetails({{u|tojson}})'
+            onkeydown='if(event.key==="Enter"||event.key===" "){event.preventDefault();openUserDetails({{u|tojson}})}'>
+          <td><b>{{u.name}}</b></td>
+          <td>{{u.email}}</td>
+          <td><span class="tag role-{{u.role}}">{{u.role}}</span></td>
+          <td>{{u.created_at[:19]}}</td>
+          <td><span class="click-hint">View details →</span></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5" class="empty">No users available.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- User details are intentionally hidden until an admin clicks a user. -->
+<div id="userDetailsModal" class="modal hidden" aria-hidden="true">
+  <div class="modalbackdrop" onclick="closeUserDetails()"></div>
+  <section class="modalcard broken-card user-details-card" role="dialog" aria-modal="true" aria-labelledby="userDetailsTitle">
+    <button class="modalclose" type="button" onclick="closeUserDetails()" aria-label="Close">×</button>
+    <div class="eyebrow">USER ACCOUNT</div>
+    <h2 id="userDetailsTitle">User details</h2>
+    <div class="user-detail-grid">
+      <div><span>Name</span><strong id="detailUserName">—</strong></div>
+      <div><span>Email</span><strong id="detailUserEmail">—</strong></div>
+      <div><span>Role</span><strong id="detailUserRole">—</strong></div>
+      <div><span>Created</span><strong id="detailUserCreated">—</strong></div>
+    </div>
+    <div id="userAdminControls" class="user-admin-controls">
+      <div class="detail-divider"></div>
+      <p class="muted">Administrator controls for this account.</p>
+      <button id="showPasswordChangeBtn" class="btn full" type="button">🔐 Change Password</button>
+    </div>
+    <div id="adminUserMessage" class="admin-message hidden"></div>
+  </section>
+</div>
+
+<!-- Password form is hidden and only appears after Change Password is clicked. -->
+<div id="passwordResetModal" class="modal hidden" aria-hidden="true">
+  <div class="modalbackdrop" onclick="closePasswordReset()"></div>
+  <section class="modalcard broken-card password-reset-card" role="dialog" aria-modal="true" aria-labelledby="passwordResetTitle">
+    <button class="modalclose" type="button" onclick="closePasswordReset()" aria-label="Close">×</button>
+    <div class="eyebrow">SECURE PASSWORD CONTROL</div>
+    <h2 id="passwordResetTitle">Change password</h2>
+    <p id="passwordResetUser" class="muted"></p>
+    <form id="passwordResetForm" autocomplete="off">
+      <input type="hidden" id="passwordResetId">
+      <label>New password
+        <input id="adminNewPassword" type="password" minlength="8" autocomplete="new-password"
+               required placeholder="Enter a strong new password">
+      </label>
+      <div class="password-rules">
+        <span>✓ 8+ characters</span><span>✓ Letter</span><span>✓ Number</span><span>✓ Symbol</span>
+      </div>
+      <button class="btn full" type="submit" id="passwordResetSubmit">Update password →</button>
+      <div id="passwordResetMessage" class="admin-message hidden"></div>
+    </form>
+  </section>
+</div>
+
+<script>
+let selectedAdminUser = null;
+
+function openUserDetails(user){
+  selectedAdminUser = user;
+  document.getElementById("detailUserName").textContent = user.name || "—";
+  document.getElementById("detailUserEmail").textContent = user.email || "—";
+  document.getElementById("detailUserRole").textContent = user.role || "—";
+  document.getElementById("detailUserCreated").textContent = (user.created_at || "—").slice(0,19);
+
+  const controls = document.getElementById("userAdminControls");
+  const btn = document.getElementById("showPasswordChangeBtn");
+  if(user.role === "user"){
+    controls.classList.remove("hidden");
+    btn.onclick = function(){ openPasswordReset(user.id, user.name); };
+  }else{
+    controls.classList.add("hidden");
+    btn.onclick = null;
+  }
+
+  const modal = document.getElementById("userDetailsModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  document.body.classList.add("modal-open");
+}
+
+function closeUserDetails(){
+  const modal = document.getElementById("userDetailsModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+  if(document.getElementById("passwordResetModal").classList.contains("hidden")){
+    document.body.classList.remove("modal-open");
+  }
+}
+
+function openPasswordReset(id,name){
+  document.getElementById("passwordResetId").value = id;
+  document.getElementById("passwordResetUser").textContent = "Account: " + name;
+  document.getElementById("adminNewPassword").value = "";
+  document.getElementById("passwordResetMessage").className = "admin-message hidden";
+  document.getElementById("passwordResetSubmit").disabled = false;
+
+  closeUserDetails();
+  const modal = document.getElementById("passwordResetModal");
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+  document.body.classList.add("modal-open");
+  setTimeout(()=>document.getElementById("adminNewPassword").focus(),180);
+}
+
+function closePasswordReset(){
+  const modal = document.getElementById("passwordResetModal");
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+  document.body.classList.remove("modal-open");
+}
+
+document.getElementById("passwordResetForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  const id = document.getElementById("passwordResetId").value;
+  const pw = document.getElementById("adminNewPassword").value;
+  const msg = document.getElementById("passwordResetMessage");
+  const btn = document.getElementById("passwordResetSubmit");
+
+  if(!id){
+    msg.className = "admin-message error";
+    msg.textContent = "Select a user first.";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Updating…";
+
+  try{
+    const r = await fetch("/api/admin/users/" + encodeURIComponent(id) + "/password", {
+      method:"PUT",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({password:pw})
+    });
+    let data = {};
+    try { data = await r.json(); } catch(_){}
+    if(!r.ok) throw new Error(data.error || "Password update failed.");
+
+    msg.className = "admin-message success";
+    msg.textContent = "Password updated successfully.";
+    document.getElementById("adminNewPassword").value = "";
+    setTimeout(closePasswordReset, 1000);
+  }catch(err){
+    msg.className = "admin-message error";
+    msg.textContent = err.message || "Password update failed.";
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Update password →";
+  }
+});
+
+document.addEventListener("keydown",function(e){
+  if(e.key !== "Escape") return;
+  if(!document.getElementById("passwordResetModal").classList.contains("hidden")) closePasswordReset();
+  else if(!document.getElementById("userDetailsModal").classList.contains("hidden")) closeUserDetails();
+});
+</script>
+
+<script>
+let adminMap, adminOriginMarker, adminDestinationMarker, adminPickMode=null;
+function adminVal(id){return document.getElementById(id).value}
+function adminSet(id,v){document.getElementById(id).value=v??''}
+function initAdminMap(){
+  adminMap=L.map('adminMap').setView([17.385,78.486],11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(adminMap);
+  adminMap.on('click',async e=>{
+    if(!adminPickMode)return;
+    const lat=e.latlng.lat.toFixed(6),lon=e.latlng.lng.toFixed(6);
+    if(adminPickMode==='origin'){adminSet('adminOriginLat',lat);adminSet('adminOriginLon',lon);await adminReverse('origin',lat,lon)}
+    else {adminSet('adminDestinationLat',lat);adminSet('adminDestinationLon',lon);await adminReverse('destination',lat,lon)}
+    adminPickMode=null;document.getElementById('adminMapHint').textContent='Map point selected. Save to apply.';adminDrawMarkers();
+  });
+}
+async function adminReverse(type,lat,lon){try{const r=await fetch(`/api/reverse?lat=${lat}&lon=${lon}`);const x=await r.json();adminSet(type==='origin'?'adminOrigin':'adminDestination',x.name)}catch(e){}}
+function adminDrawMarkers(){
+  if(adminOriginMarker)adminMap.removeLayer(adminOriginMarker);if(adminDestinationMarker)adminMap.removeLayer(adminDestinationMarker);
+  const olat=parseFloat(adminVal('adminOriginLat')),olon=parseFloat(adminVal('adminOriginLon')),dlat=parseFloat(adminVal('adminDestinationLat')),dlon=parseFloat(adminVal('adminDestinationLon'));
+  const pts=[];if(Number.isFinite(olat)&&Number.isFinite(olon)){adminOriginMarker=L.circleMarker([olat,olon],{radius:8,className:'origin-marker'}).addTo(adminMap).bindTooltip('Origin');pts.push([olat,olon])}
+  if(Number.isFinite(dlat)&&Number.isFinite(dlon)){adminDestinationMarker=L.circleMarker([dlat,dlon],{radius:8,className:'destination-marker'}).addTo(adminMap).bindTooltip('Destination');pts.push([dlat,dlon])}
+  if(pts.length===2)adminMap.fitBounds(L.latLngBounds(pts),{padding:[40,40]});else if(pts.length)adminMap.setView(pts[0],13);
+}
+function editAdminOrder(o){
+  adminSet('adminOrderId',o.id);adminSet('adminCustomer',o.customer);adminSet('adminOrigin',o.origin);adminSet('adminDestination',o.destination);
+  adminSet('adminOriginLat',o.origin_lat);adminSet('adminOriginLon',o.origin_lon);adminSet('adminDestinationLat',o.destination_lat);adminSet('adminDestinationLon',o.destination_lon);
+  adminSet('adminTraffic',o.traffic);adminSet('adminWeather',o.weather);adminSet('adminPriority',o.priority);adminSet('adminStatus',o.status);
+  document.getElementById('adminMapHint').textContent=`Editing order #${o.id}. Pick a map point if you want to change a location.`;document.getElementById('adminMessage').classList.add('hidden');adminDrawMarkers();document.getElementById('adminEditor').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function deleteAdminOrder(id){if(!confirm(`Delete order #${id}? This cannot be undone.`))return;const r=await fetch(`/api/admin/orders/${id}`,{method:'DELETE'});const x=await r.json();if(!r.ok){alert(x.error||'Delete failed');return}document.getElementById(`admin-order-${id}`)?.remove();document.getElementById('adminOrderId').value='';showAdminMessage(`Order #${id} deleted.`,'success')}
+function showAdminMessage(msg,type){const el=document.getElementById('adminMessage');el.className=`admin-message ${type}`;el.textContent=msg}
+document.addEventListener('DOMContentLoaded',()=>{
+ initAdminMap();
+ document.getElementById('adminPickOrigin').onclick=()=>{adminPickMode='origin';document.getElementById('adminMapHint').textContent='Click the map to choose a new origin.'};
+ document.getElementById('adminPickDestination').onclick=()=>{adminPickMode='destination';document.getElementById('adminMapHint').textContent='Click the map to choose a new destination.'};
+ document.getElementById('adminOrderForm').onsubmit=async e=>{e.preventDefault();const id=adminVal('adminOrderId');if(!id){showAdminMessage('Select an order first.','error');return}const payload={customer:adminVal('adminCustomer'),origin:adminVal('adminOrigin'),destination:adminVal('adminDestination'),origin_lat:adminVal('adminOriginLat'),origin_lon:adminVal('adminOriginLon'),destination_lat:adminVal('adminDestinationLat'),destination_lon:adminVal('adminDestinationLon'),traffic:adminVal('adminTraffic'),weather:adminVal('adminWeather'),priority:adminVal('adminPriority'),status:adminVal('adminStatus')};const btn=document.getElementById('adminSaveBtn');btn.disabled=true;btn.textContent='Saving & recalculating…';try{const r=await fetch(`/api/admin/orders/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const x=await r.json();if(!r.ok)throw new Error(x.error||'Update failed');showAdminMessage(`Order #${id} updated. New route distance: ${Number(x.distance_km).toFixed(2)} km · ETA: ${x.eta_at?new Date(x.eta_at).toLocaleString():'—'}.`,'success');setTimeout(()=>location.reload(),900)}catch(err){showAdminMessage(err.message,'error')}finally{btn.disabled=false;btn.textContent='Save changes & recalculate →'}};
+});
+</script>
+{% endblock %}

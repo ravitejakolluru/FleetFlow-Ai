@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block content %}
+<div class="auth-page"><div class="auth-shell">
+  <section class="auth-showcase">
+    <div class="auth-badge">FLEETFLOW AI · INTELLIGENT LOGISTICS</div>
+    <h1>Move smarter.<br>Deliver faster.</h1>
+    <p>AI-powered delivery prediction, real-time transit intelligence and fleet resource allocation in one operations platform.</p>
+    <div class="auth-metrics">
+      <div class="auth-metric"><b>AI</b><span>ETA ENGINE</span></div>
+      <div class="auth-metric"><b>LIVE</b><span>ROUTE TRACKING</span></div>
+      <div class="auth-metric"><b>24/7</b><span>OPERATIONS</span></div>
+    </div>
+  </section>
+  <section class="auth-form">
+    <div class="auth-type"><span>SECURE ACCESS</span><span>REAL-TIME</span></div>
+<div class="auth"><div class="authbox"><div class="eyebrow">SECURE ACCESS</div><h1>Welcome back.</h1><p>Sign in with your user account.</p>
+<form method="post"><label>Email<input name="email" type="email" required autocomplete="email"></label><label>Password<input name="password" type="password" required autocomplete="current-password"></label><button class="btn full">Sign in</button></form>
+<p class="muted">New here? <a href="{{url_for('register')}}">Create a user account</a></p></div></div></section></div></div>{% endblock %}

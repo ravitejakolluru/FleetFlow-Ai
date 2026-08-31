@@ -1,0 +1,6 @@
+.env
+*.pyc
+__pycache__/
+delivery_fleet.db
+.venv/
+venv/

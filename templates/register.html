@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block content %}
+<div class="auth-page"><div class="auth-shell">
+  <section class="auth-showcase">
+    <div class="auth-badge">FLEETFLOW AI · INTELLIGENT LOGISTICS</div>
+    <h1>Move smarter.<br>Deliver faster.</h1>
+    <p>AI-powered delivery prediction, real-time transit intelligence and fleet resource allocation in one operations platform.</p>
+    <div class="auth-metrics">
+      <div class="auth-metric"><b>AI</b><span>ETA ENGINE</span></div>
+      <div class="auth-metric"><b>LIVE</b><span>ROUTE TRACKING</span></div>
+      <div class="auth-metric"><b>24/7</b><span>OPERATIONS</span></div>
+    </div>
+  </section>
+  <section class="auth-form">
+    <div class="auth-type"><span>SECURE ACCESS</span><span>REAL-TIME</span></div>
+<div class="auth"><div class="authbox"><div class="eyebrow">USER ACCOUNT</div><h1>Create your account.</h1><p>Only standard user accounts can be created here.</p>
+<form method="post"><label>Name<input name="name" required></label><label>Email<input name="email" type="email" required></label><label>Password<input name="password" type="password" minlength="8" required autocomplete="new-password" pattern="(?=.*[A-Za-z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,}" title="Use at least 8 characters with a letter, number and symbol."><small class="password-hint">Minimum 8 characters · must include a letter, number and symbol.</small></label><button class="btn full">Create account</button></form>
+<p class="muted">The global administrator is provisioned privately on the server and cannot be registered here.</p></div></div></section></div></div>{% endblock %}

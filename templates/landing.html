@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% block content %}
+<section class="hero">
+<div><div class="eyebrow">AI • LOGISTICS • REAL-TIME DECISIONS</div><h1>Predict faster.<br><span>Deliver smarter.</span></h1>
+<p>FleetFlow turns delivery inputs into explainable ETA predictions, intelligent fleet allocation and map-first logistics decisions.</p>
+<div class="actions"><a class="btn" href="{{ url_for('register') }}">Start planning →</a><a class="ghost" href="{{ url_for('login') }}">Sign in</a></div></div>
+<div class="hero-card"><div class="orb">F</div><b>FleetAI</b><span>Operations intelligence</span><div class="metric"><strong>ETA</strong><em>Dynamic</em></div><div class="metric"><strong>Fleet</strong><em>Optimized</em></div><div class="metric"><strong>Map</strong><em>Live-ready</em></div></div>
+</section>
+<section class="featuregrid"><article><b>01 / ETA ENGINE</b><h3>Delivery prediction</h3><p>Estimate delivery time from distance, traffic, weather and priority.</p></article><article><b>02 / ALLOCATION</b><h3>Fleet intelligence</h3><p>Match available vehicle resources to delivery requirements.</p></article><article><b>03 / MAP OPS</b><h3>Visual logistics</h3><p>Inspect routes and operational locations on an interactive map.</p></article><article><b>04 / FLEETAI</b><h3>Built-in assistant</h3><p>Ask operational questions without leaving the dashboard.</p></article></section>
+{% endblock %}
